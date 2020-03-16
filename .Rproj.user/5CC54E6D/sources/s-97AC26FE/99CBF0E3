@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1584323209764.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "99CBF0E3",
+    "lastKnownWriteTime" : 1584325881,
+    "last_content_update" : 1584325881634,
+    "path" : "~/Documents/GitHub/personal/covid-19/scripts/time-series.R",
+    "project_path" : "scripts/time-series.R",
+    "properties" : {
+        "cursorPosition" : "97,33",
+        "scrollLine" : "83",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

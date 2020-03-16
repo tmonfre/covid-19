@@ -1,0 +1,27 @@
+## Data Visualization (GOVT16-QSS17) Summer 2019
+## Data Visualization with ggplot2, Part 2
+##
+## Name: Thomas Monfre
+## Date: July 3, 2019
+
+library(tidyverse)
+library(maps)
+
+filename <- "./Session04/data/6583.csv"
+dta <- read.csv(filename, stringsAsFactors = FALSE)
+states <- map_data("state")
+
+plot <- ggplot() +
+  geom_polygon(data = states, 
+               mapping = aes(long, lat, group = group), 
+               fill = "lightgreen", 
+               color = "white") +
+  coord_map(projection = "polyconic", xlim = c(min(states$long), max(states$long))) +
+  geom_point(data = dta, 
+             mapping = aes(longitude, latitude, size = Capacity),
+             alpha = 0.7) + 
+  labs(title = "NCAA Division I Football Stadiums, Locations, and Capacities",
+       x = "Longitude",
+       y = "Latitude")
+
+plot

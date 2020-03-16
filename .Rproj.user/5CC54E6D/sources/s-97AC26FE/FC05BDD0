@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1584299393446.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "FC05BDD0",
+    "lastKnownWriteTime" : 1584323258,
+    "last_content_update" : 1584323258407,
+    "path" : "~/Documents/GitHub/personal/covid-19/scripts/all-time.R",
+    "project_path" : "scripts/all-time.R",
+    "properties" : {
+        "cursorPosition" : "79,92",
+        "scrollLine" : "72"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

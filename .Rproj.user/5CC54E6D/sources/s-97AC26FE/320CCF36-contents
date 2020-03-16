@@ -1,0 +1,183 @@
+## Data Visualization (GOVT16-QSS17) Summer 2019
+## More on R and Data Visualization, Part 1
+##
+## Name: Thomas Monfre
+## Date: July 30, 2019
+
+library(tidyverse)
+library(readxl)
+library(gridExtra)
+
+# Load Data ---------------------------------------------------------------
+
+df <- read_xlsx("./Session07/data/Total_Economic_and_Military_Assistance_1946-2015.xlsx",
+                sheet = "Economic and Military Aid",
+                skip = 6)
+
+GreenBook1 <- df %>% 
+  filter(Country == "Saudi Arabia") %>% 
+  rename(Year = `Fiscal Year`,
+         Dollars = `Obligations (Constant Dollars)`) %>% 
+  group_by(Year) %>% 
+  summarise(Amount = sum(Dollars)) %>%
+  ungroup()
+
+
+# Analysis 1 --------------------------------------------------------------
+
+i <- 1946
+while(i <= 1955) {
+  print(GreenBook1$Amount[GreenBook1$Year == i])
+  i <- i + 1
+}
+
+for (i in 1946:1955) {
+  print(paste("Amount of Aid to Saudi Arabia in", GreenBook1$Year[GreenBook1$Year == i], "=", GreenBook1$Amount[GreenBook1$Year == i]))
+}
+
+min <- min(GreenBook1$Year)
+max <- max(GreenBook1$Year)
+Year <- data.frame(Year = min:max)
+
+GreenBook2 <- left_join(Year, GreenBook1, by = "Year")
+
+for (i in 1946:1955) {
+  print(paste("Amount of Aid to Saudi Arabia in", GreenBook2$Year[GreenBook2$Year == i], "=", ifelse(is.na(GreenBook2$Amount[GreenBook2$Year == i]), 0, GreenBook2$Amount[GreenBook2$Year == i])))
+}
+
+
+# Analysis 2 --------------------------------------------------------------
+
+find_total <- function(country, from, to) {
+  output <- df %>%
+    filter(Country == country) %>%
+    rename(Year = `Fiscal Year`,
+           Dollars = `Obligations (Constant Dollars)`) %>%
+    group_by(Year) %>%
+    summarise(Amount = sum(Dollars)) %>%
+    ungroup() %>% 
+    
+    right_join(data.frame(Year = from:to)) %>% 
+    filter(Year %in% seq(from, to, 1)) %>% 
+    mutate(Amount = ifelse(is.na(Amount), 0, Amount),
+           Result = paste("Amount of Aid to", country, "in", Year, "=", Amount)) %>% 
+    select(Result)
+  
+  print(output)
+}
+
+find_total(country = "Syria", from = 2010, to = 2015)
+
+
+# Analysis 3 --------------------------------------------------------------
+
+# build base data to work from
+GreenBook <- df %>% 
+  rename(Year = `Fiscal Year`,
+         Category = `Assistance Category`,
+         Dollar = `Obligations (Historical Dollars)`) %>% 
+  select(Year, Region, Country, Category, Dollar) %>% 
+  filter(!grepl("(not specified)", Country))
+
+GreenBook.Post2001 <- GreenBook %>% 
+  filter(Year >= 2001) %>% 
+  group_by(Country, Category) %>% 
+  summarise(Amount = sum(Dollar)) %>% 
+  ungroup() %>% 
+  mutate(Amount = Amount / 1000000000) %>% 
+  spread(Category, Amount, fill = 0) %>% 
+  mutate(Ratio = 100 * (Military / (Military + Economic))) %>% 
+  arrange(desc(Ratio))
+
+# get top 10s
+top10e <- GreenBook.Post2001 %>% 
+  select(Country, Economic) %>% 
+  arrange(desc(Economic)) %>% 
+  head(10)
+
+top10m <- GreenBook.Post2001 %>% 
+  select(Country, Military) %>% 
+  arrange(desc(Military)) %>% 
+  head(10)
+
+# read quality of gov data
+data2 <- "Session02/data/qog_bas_cs_jan17.csv"
+ccode <- read.csv(data2, stringsAsFactors = FALSE) %>% 
+  select(cname, ccodealp) %>% 
+  rename(Country = cname, id = ccodealp)
+
+# find bad matches
+anti_join(top10e, ccode, by = "Country")
+anti_join(top10m, ccode, by = "Country")
+
+# find bad match names
+ccode %>% filter(grepl("Pakistan", Country))
+ccode %>% filter(grepl("Ethiopia", Country))
+ccode %>% filter(grepl("Sudan", Country))
+
+# change country names
+GreenBook.Post2001 <- GreenBook.Post2001 %>% 
+  mutate(Country = ifelse(Country == "Pakistan", "Pakistan (1971-)", Country)) %>% 
+  mutate(Country = ifelse(Country == "Ethiopia", "Ethiopia (1993-)", Country)) %>% 
+  mutate(Country = ifelse(Country == "Sudan", "Sudan (2012-)", Country))
+
+# update top 10s
+top10e <- GreenBook.Post2001 %>% 
+  select(Country, Economic) %>% 
+  arrange(desc(Economic)) %>% 
+  head(10)
+
+top10m <- GreenBook.Post2001 %>% 
+  select(Country, Military) %>% 
+  arrange(desc(Military)) %>% 
+  head(10)
+
+# merge to get ID
+top10eID <- left_join(top10e, ccode, by = "Country")
+top10mID <- left_join(top10m, ccode, by = "Country")
+
+# get map data
+data3 <- "Session08/data/HiResWorldMapWithISO3.csv"
+worldmap <- read.csv(data3, stringsAsFactors = FALSE)
+
+worldmap_top10e <- left_join(worldmap, top10eID, by = "id")
+worldmap_top10m <- left_join(worldmap, top10mID, by = "id")
+
+plot10e <- ggplot(data = worldmap_top10e) +
+  geom_polygon(mapping = aes(
+    x = long, 
+    y = lat, 
+    group = group,
+    fill = Economic),
+    color = "grey80") +
+  scale_fill_gradient(limits = c(0,50), low = "light blue", high = "blue", na.value = "grey90") +
+  coord_equal() + 
+  theme_minimal() +
+  labs(title = "Top 10 Recipients of U.S. Economic Aid",
+       x = "",
+       y = "",
+       fill = "$ Billion")
+
+plot10e
+
+plot10m <- ggplot(data = worldmap_top10m) +
+  geom_polygon(mapping = aes(
+    x = long, 
+    y = lat, 
+    group = group,
+    fill = Military),
+    color = "grey80") +
+  scale_fill_gradient(limits = c(0,50), low = "pink", high = "red", na.value = "grey90") +
+  coord_equal() + 
+  theme_minimal() +
+  labs(title = "Top 10 Recipients of U.S. Military Aid",
+       x = "",
+       y = "",
+       fill = "$ Billion")
+
+plot10m
+
+g <- arrangeGrob(plot10e, plot10m)
+ggsave(filename = "Session08/figures/Session08_figure.pdf",
+       plot = g, width = 10, height = 7.5)
+

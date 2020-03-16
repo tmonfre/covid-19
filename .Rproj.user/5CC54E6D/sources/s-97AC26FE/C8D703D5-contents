@@ -1,0 +1,71 @@
+## Thomas Monfre
+## Time-series data visualization of the global COVID-19 pandemic
+## Data acquired from: https://data.humdata.org/dataset/novel-coronavirus-2019-ncov-cases
+
+library(tidyverse)
+
+# Prepare Data ------------------------------------------------------------
+
+# import data on confirmed cases
+confirmed <- read.csv("./data/time_series-ncov-Confirmed.csv", stringsAsFactors = FALSE) %>% 
+  slice(2:n()) %>% 
+  rename(country = Country.Region, state = Province.State, date = Date, confirmed = Value) %>% 
+  select(country, state, date, confirmed) %>% 
+  group_by(country, state, date)
+
+# import data on deaths
+deaths <- read.csv("./data/time_series-ncov-Deaths.csv", stringsAsFactors = FALSE) %>% 
+  slice(2:n()) %>% 
+  rename(country = Country.Region, state = Province.State, date = Date, deaths = Value) %>% 
+  select(country, state, date, deaths) %>% 
+  group_by(country, state, date)
+
+# import data on recovered cases
+recovered <- read.csv("./data/time_series-ncov-Recovered.csv", stringsAsFactors = FALSE) %>% 
+  slice(2:n()) %>% 
+  rename(country = Country.Region, state = Province.State, date = Date, recovered = Value) %>% 
+  select(country, state, date, recovered) %>% 
+  group_by(country, state, date)
+
+# combine to one data frame
+data <- left_join(confirmed, deaths, c("country", "state", "date")) %>% 
+  left_join(recovered, c("country", "state", "date"))
+
+remove(confirmed, deaths, recovered)
+
+# import data on country codes
+# country_codes <- read.csv("./data/country-codes.csv", stringsAsFactors = FALSE) %>% 
+#   select(ISO3166.1.Alpha.3, official_name_en, Region.Name, Sub.region.Name, Continent, 
+#          Region.Code, Sub.region.Code) %>% 
+#   rename(id = ISO3166.1.Alpha.3, country = official_name_en, region_name = Region.Name,subregion_name = Sub.region.Name, 
+#          continent = Continent, region_code = Region.Code, subregion_code = Sub.region.Code)
+# 
+# # join region code data together
+# data <- left_join(data, country_codes, by = "country")
+# worldmap_covid19 <- read.csv("./data/HiResWorldMapWithISO3.csv", stringsAsFactors = FALSE) %>% 
+#   left_join(data, by = "id")
+# 
+# remove(country_codes)
+# 
+# # Visualization -----------------------------------------------------------
+# 
+# 
+# ggplot(data = worldmap_covid19) +
+#   geom_polygon(mapping = aes(
+#     x = long,
+#     y = lat,
+#     group = group,
+#     fill = confirmed),
+#     color = "grey80")
+  # scale_fill_gradient(limits = c(0,50), low = "light blue", high = "blue", na.value = "grey90") +
+  # coord_equal() +
+  # theme_minimal() +
+  # labs(title = "Top 10 Recipients of U.S. Economic Aid",
+  #      x = "",
+  #      y = "",
+  #      fill = "$ Billion")
+
+# ggplot(data, mapping = aes(x = Date, y = Value)) +
+  # geom_col()
+
+# levels(data$Country.Region)

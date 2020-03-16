@@ -1,0 +1,79 @@
+## Data Visualization (GOVT16-QSS17) Summer 2019
+## Data Visualization with ggplot2, Part 3
+##
+## Name: Thomas Monfre
+## Date: July 9, 2019
+
+library(tidyverse)
+library(readxl)
+library(ggthemes)
+
+# Figure 1 ----------------------------------------------------------------
+
+# read and clean data
+df.1 <- read_excel("./Session05/data/des_data.xls")
+
+columns <- c("R/E", "year", "pct")
+df.1 <- df.1[columns]
+df.1 <- na.omit(object = df.1)
+
+df.1$`R/E` <- factor(df.1$`R/E`,
+                   levels = c("White", "Black", "Hispanic", "Asian/Pacific Islander", "American Indian/Alaska Native"))
+
+df.1$year <- as.character(df.1$year)
+
+df.1$pct_white <- paste0(round(df.1$pct, digits = 1), "%")
+df.1[df.1$`R/E` != "White", "pct_white"] <- NA
+
+# generate plot
+p1 <- ggplot(data = df.1,
+       mapping = aes(x = year, y = pct)) +
+  geom_col(mapping = aes(fill = `R/E`),
+           color = "white") +
+  geom_text(mapping = aes(x = year,
+                          label = pct_white),
+            y = 60,
+            size = 3,
+            na.rm = TRUE) + 
+  theme_minimal() +
+  scale_fill_brewer(palette = "Pastel1") +
+  labs(title = "Demographic Composition of University Faculty Over Time, by Race/Ethnicity",
+       subtitle = "Sources: Tabs (2002, Table 5A), The Digest of Education Statistics (2016, Table 315.20)",
+       x = "Year",
+       y = "%",
+       fill = "Race/Ethnicity") +
+  theme(legend.position = "bottom") +
+  guides(fill = guide_legend(ncol = 3, byrow = TRUE))
+
+p1
+
+ggsave(filename = "./Session05/figures/figure1.pdf", plot = p1, scale = 0.8, width = 10, height = 7.5)
+
+
+# Figure 2 ----------------------------------------------------------------
+
+df.2 <- read_excel("./Session05/data/des_data.xls", sheet = 2)
+
+p2 <- ggplot(data = df.2,
+       mapping = aes(x = year, y = pct)) +
+  geom_col(fill = "lightgrey") +
+  geom_hline(yintercept = 50, linetype = "dashed") +
+  geom_text(mapping = aes(x = year,
+                          label = paste0(pct,"%"),
+                          y = pct + 4),
+            size = 4,
+            na.rm = TRUE) +
+  facet_grid(. ~ type) +
+  ylim(c(0,100)) +
+  labs(title = "Percentage of University Faculty who are Women",
+       subtitle = "Source: TIAA (2013, Table 2, Table 3)",
+       x = "Year",
+       y = "%") +
+  theme_few()
+
+p2
+
+ggsave(filename = "./Session05/figures/figure2.pdf", plot = p2, scale = 0.8, width = 10, height = 7.5)
+
+
+  
